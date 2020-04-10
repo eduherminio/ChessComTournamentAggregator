@@ -72,7 +72,7 @@ namespace ChessComTournamentAggregator.App
         private static IEnumerable<string> AskForTournaments()
         {
             Console.WriteLine("\nType or paste the full tournament urls that you want to aggregate, separated by a new line.");
-            Console.WriteLine("They are expected to look like https://www.chess.com/tournament/live/xxxxx1234");
+            Console.WriteLine("They are expected to look like this: https://www.chess.com/tournament/live/xxxxx1234");
             Console.WriteLine("Hit enter again when finished.");
 
             while (true)
