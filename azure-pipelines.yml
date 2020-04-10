@@ -3,7 +3,7 @@ name: $(BuildID)
 trigger:
   branches:
     include:
-    - add-files
+    - master
 
 variables:
   Agent: 'windows-2019'
@@ -42,7 +42,7 @@ stages:
 - stage: CD
   displayName: 'Generate and publish artifacts'
   dependsOn: 'CI'
-  condition: and(succeeded('CI'), eq(variables['Build.SourceBranch'], 'refs/heads/add-files'))
+  condition: and(succeeded('CI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   jobs:
   - job: cd
     displayName: 'Generate and publish artifacts'
