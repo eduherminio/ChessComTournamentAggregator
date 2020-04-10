@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
+    <LangVersion>8.0</LangVersion>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Title>ChessComTournamentAggregator</Title>
+    <PackageId>ChessComTournamentAggregator</PackageId>
+    <Version>0.1.0</Version>
+    <PackageTags>Chess, Chess.com, Tournament, Aggregator</PackageTags>
+    <Tags>$(PackageTags)</Tags>
+    <Authors>Eduardo Cáceres</Authors>
+    <Description>
+      Library allows you to aggregate the results of multiple chess.com tournaments
+    </Description>
+    <PackageLicenseUrl>https://github.com/eduherminio/ChessComTournamentAggregator/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/eduherminio/ChessComTournamentAggregator</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/eduherminio/ChessComTournamentAggregator</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LichessTournamentAggregator" Version="0.3.0" />
+    <PackageReference Include="System.Text.Json" Version="4.7.1"/>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>

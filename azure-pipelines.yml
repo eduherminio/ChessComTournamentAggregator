@@ -1,0 +1,153 @@
+name: $(BuildID)
+
+trigger:
+  branches:
+    include:
+    - master
+
+variables:
+  Agent: 'windows-2019'
+  BuildConfiguration: 'Release'   # configuration to pack, does not work with build step
+  Windowsx64: 'win-x64'
+  Windowsx86: 'win-x86'
+  Linux64: 'linux-x64'
+  OSXx64: 'osx-x64'
+
+stages:
+- stage: CI
+  displayName: 'Build and run tests'
+  jobs:
+  - job: ci
+    displayName: 'Build and run tests'
+    pool:
+      vmImage: $(Agent)
+    steps:
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build'
+      inputs:
+        command: build
+        arguments: '--configuration Release /p:PublishSingleFile=false'
+        projects: 'ChessComTournamentAggregator.sln'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Run tests'
+      inputs:
+        command: test
+        arguments: '--configuration Release --no-build --logger trx --collect "Code coverage"'
+        nobuild: true
+        projects: '**/*.Test.csproj'
+        publishTestResults: true
+
+- stage: CD
+  displayName: 'Generate and publish artifacts'
+  dependsOn: 'CI'
+  condition: and(succeeded('CI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+  - job: cd
+    displayName: 'Generate and publish artifacts'
+    pool:
+      vmImage: $(Agent)
+    steps:
+
+    - checkout: self
+      persistCredentials: true
+      clean: true
+
+    - task: NuGetToolInstaller@1
+      displayName: 'Setup NuGet'
+      inputs:
+        versionSpec: '5.3.1'
+        checkLatest: true
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build'
+      inputs:
+        command: 'build'
+        arguments: '--configuration Release /p:PublishSingleFile=false'
+        projects: 'ChessComTournamentAggregator.sln'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Generate NuGet package'
+      inputs:
+        command: 'pack'
+        arguments: '--configuration Release'
+        configuration: '$(BuildConfiguration)'
+        packagesToPack: '**/*ChessComTournamentAggregator.csproj'
+        nobuild: true
+        packDirectory: '$(Build.SourcesDirectory)/ChessComTournamentAggregator/Artifacts'
+        versioningScheme: 'off'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Generate executable for $(Windowsx64)'
+      inputs:
+        command: 'publish'
+        arguments: '--configuration Release --runtime $(Windowsx64) --output $(Build.SourcesDirectory)/ChessComTournamentAggregator/Artifacts/$(Windowsx64)'
+        configuration: '$(BuildConfiguration)'
+        projects: '**/*.App.csproj'
+        modifyOutputPath: false
+        publishWebProjects: false
+        zipAfterPublish: false
+        versioningScheme: 'off'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Generate executable for $(Windowsx86)'
+      inputs:
+        command: 'publish'
+        arguments: '--configuration Release --runtime $(Windowsx86) --output $(Build.SourcesDirectory)/ChessComTournamentAggregator/Artifacts/$(Windowsx86)'
+        configuration: '$(BuildConfiguration)'
+        projects: '**/*.App.csproj'
+        modifyOutputPath: false
+        publishWebProjects: false
+        zipAfterPublish: false
+        versioningScheme: 'off'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Generate executable for $(Linux64)'
+      inputs:
+        command: 'publish'
+        arguments: '--configuration Release --runtime $(Linux64) --output $(Build.SourcesDirectory)/ChessComTournamentAggregator/Artifacts/$(Linux64)'
+        configuration: '$(BuildConfiguration)'
+        projects: '**/*.App.csproj'
+        modifyOutputPath: false
+        publishWebProjects: false
+        zipAfterPublish: false
+        versioningScheme: 'off'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Generate executable for $(OSXx64)'
+      inputs:
+        command: 'publish'
+        arguments: '--configuration Release --runtime $(OSXx64) --output $(Build.SourcesDirectory)/ChessComTournamentAggregator/Artifacts/$(OSXx64)'
+        configuration: '$(BuildConfiguration)'
+        projects: '**/*.App.csproj'
+        modifyOutputPath: false
+        publishWebProjects: false
+        zipAfterPublish: false
+        versioningScheme: 'off'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish artifacts: NuGet package and its symbols and app executables'
+      inputs:
+        pathtoPublish: '$(Build.SourcesDirectory)/ChessComTournamentAggregator/Artifacts/'
+        artifactName: 'ChessComTournamentAggregator'
+
+    - task: NuGetCommand@2
+      displayName: 'Push NuGet package'
+      continueOnError: true
+      inputs:
+        command: 'push'
+        packagesToPush: '$(Build.SourcesDirectory)/ChessComTournamentAggregator/Artifacts/*.nupkg'
+        nuGetFeedType: 'external'
+        publishFeedCredentials: 'ChessComTournamentAggregator_NuGet'
+        verbosityPush: 'Detailed'
+
+    - task: NuGetCommand@2
+      displayName: 'Push GitHub package'
+      continueOnError: true
+      inputs:
+        command: 'push'
+        packagesToPush: '$(Build.SourcesDirectory)/ChessComTournamentAggregator/Artifacts/*.nupkg'
+        nuGetFeedType: 'external'
+        publishFeedCredentials: 'GitHubPackageRegistry'
+        verbosityPush: 'Detailed'
