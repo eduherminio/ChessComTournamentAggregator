@@ -7,7 +7,7 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Title>ChessComTournamentAggregator</Title>
     <PackageId>ChessComTournamentAggregator</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <PackageTags>Chess, Chess.com, Tournament, Aggregator</PackageTags>
     <Tags>$(PackageTags)</Tags>
     <Authors>Eduardo Cáceres</Authors>
@@ -27,8 +27,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LichessTournamentAggregator" Version="0.3.0" />
-    <PackageReference Include="System.Text.Json" Version="4.7.1"/>
+    <PackageReference Include="LichessTournamentAggregator" Version="0.3.1" />
+    <PackageReference Include="System.Text.Json" Version="4.7.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
 
