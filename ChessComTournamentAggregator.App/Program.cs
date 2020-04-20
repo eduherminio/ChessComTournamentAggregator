@@ -11,7 +11,8 @@ namespace ChessComTournamentAggregator.App
     {
         private const string RepoUrl = "https://github.com/eduherminio/ChessComTournamentAggregator";
         private static readonly string FailureMessage = "The program has failed unexpectedly," +
-            $" please have a look at our FAQ: {RepoUrl}#faqs (or just contact me)," +
+            $" please have a look at our FAQ: {RepoUrl}#faqs\n" +
+            "If you still experience issues, raise an issue there (or contact me)" +
             $" including the following info:{Environment.NewLine}";
 
         public static async Task Main(string[] args)

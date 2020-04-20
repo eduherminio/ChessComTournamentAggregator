@@ -87,17 +87,32 @@ namespace ChessComTournamentAggregator
 
             var rawContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-            foreach (var round in JsonSerializer.Deserialize<Tournament>(rawContent).Rounds)
+            foreach (var roundUrl in JsonSerializer.Deserialize<Tournament>(rawContent).Rounds)
             {
-                response = await client.GetAsync(round).ConfigureAwait(false);
+                response = await client.GetAsync(roundUrl).ConfigureAwait(false);
                 rawContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-                foreach (var group in JsonSerializer.Deserialize<Round>(rawContent).Groups)
-                {
-                    response = await client.GetAsync(group).ConfigureAwait(false);
-                    rawContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var round = JsonSerializer.Deserialize<Round>(rawContent);
+                bool isSwiss = round.Groups != null;
 
-                    foreach (var player in JsonSerializer.Deserialize<Group>(rawContent).Players)
+                if (isSwiss)
+                {
+                    foreach (var groupUrl in round.Groups)
+                    {
+                        response = await client.GetAsync(groupUrl).ConfigureAwait(false);
+                        rawContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                        var group = JsonSerializer.Deserialize<Group>(rawContent);
+
+                        foreach (var player in group.Players)
+                        {
+                            yield return player.ToTournamentResult();
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var player in round.Players)
                     {
                         yield return player.ToTournamentResult();
                     }
@@ -114,13 +129,15 @@ namespace ChessComTournamentAggregator
 
         private static FileStream PopulateCsvStream(FileStream fileStream, string separator, IEnumerable<AggregatedResult> aggregatedResults)
         {
-            var headers = new List<string> { "Username", "Total Score" };
+            var headers = new List<string> { "Username", "Total Score", "Scores" };
             using var sw = new StreamWriter(fileStream);
             sw.WriteLine(string.Join(separator, headers));
 
+            var internalSeparator = separator == ";" ? "," : ";";
+            string aggregate<T>(IEnumerable<T> items) => $"[{string.Join(internalSeparator, items)}]";
             foreach (var result in aggregatedResults)
             {
-                var columns = new string[] { result.Username, result.TotalScores.ToString() };
+                var columns = new string[] { result.Username, result.TotalScores.ToString(), aggregate(result.Scores) };
                 sw.WriteLine(string.Join(separator, columns));
             }
 
