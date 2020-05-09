@@ -27,9 +27,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LichessTournamentAggregator" Version="0.3.1" />
+    <PackageReference Include="LichessTournamentAggregator" Version="0.3.2" />
     <PackageReference Include="System.Text.Json" Version="4.7.1" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
