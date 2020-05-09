@@ -7,7 +7,7 @@
     <RuntimeIdentifiers>win-x64;win-x86;linux-x64;osx-x64</RuntimeIdentifiers>
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>true</PublishTrimmed>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Authors>Eduardo Cáceres</Authors>
     <Description>
       Multiplatform desktop app that allows you to aggregate the results of multiple Chess.com tournaments
@@ -19,5 +19,13 @@
   <ItemGroup>
     <ProjectReference Include="..\ChessComTournamentAggregator\ChessComTournamentAggregator.csproj" />
   </ItemGroup>
+
+  <Target Name="RenameApp" AfterTargets="Publish">
+    <ItemGroup>
+      <FilesToRename Include="$(PublishDir)\$(AssemblyName)*" />
+    </ItemGroup>
+    <Message Text="## Renaming @(FilesToRename) to @(FilesToRename -> Replace('App', '$(Version)-$(RuntimeIdentifier)'))" Importance="High" />
+    <Move SourceFiles="@(FilesToRename)" DestinationFiles="@(FilesToRename -> Replace('App', '$(Version)-$(RuntimeIdentifier)'))" />
+  </Target>
 
 </Project>
