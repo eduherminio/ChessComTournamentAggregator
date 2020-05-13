@@ -16,22 +16,13 @@ namespace ChessComTournamentAggregator
     {
         public async IAsyncEnumerable<AggregatedResult> AggregateResults(IEnumerable<string> tournamentIdsOrUrls)
         {
-            var queue = new Queue<IAsyncEnumerable<TournamentResult>>();
-            foreach (var url in GetUrls(tournamentIdsOrUrls))
-            {
-                queue.Enqueue(GetTournamentResults(url));
-            }
+            var aggregatedResults = await GetUrls(tournamentIdsOrUrls)
+                .Select(GetTournamentResults)
+                .Aggregate((result, next) => result.Concat(next))
+                .ToListAsync()
+            .ConfigureAwait(false);
 
-            var results = new List<TournamentResult>();
-            while (queue.Count > 0)
-            {
-                await foreach (var result in queue.Dequeue())
-                {
-                    results.Add(result);
-                }
-            }
-
-            foreach (var grouping in GroupResultsByPlayer(results))
+            foreach (var grouping in GroupResultsByPlayer(aggregatedResults))
             {
                 yield return new AggregatedResult(grouping);
             }
@@ -47,18 +38,11 @@ namespace ChessComTournamentAggregator
 
         public async Task<FileStream> AggregateResultsAndExportToCsv(IEnumerable<string> tournamentIdsOrUrls, FileStream fileStream, string separator = ";")
         {
-            var aggregatedResults = new List<AggregatedResult>();
-            await foreach (var result in AggregateResults(tournamentIdsOrUrls))
-            {
-                aggregatedResults.Add(result);
-            }
-
-            aggregatedResults = aggregatedResults
+            var aggregatedResults = AggregateResults(tournamentIdsOrUrls)
                 .OrderByDescending(r => r.TotalScores)
-                .ThenByDescending(r => r.AveragePerformance)
-                .ToList();
+                .ThenByDescending(r => r.AveragePerformance);
 
-            return PopulateCsvStream(fileStream, separator, aggregatedResults);
+            return await PopulateCsvStreamAsync(fileStream, separator, aggregatedResults).ConfigureAwait(false);
         }
 
         internal IEnumerable<Uri> GetUrls(IEnumerable<string> tournamentIdsOrUrls)
@@ -126,7 +110,7 @@ namespace ChessComTournamentAggregator
                 .GroupBy(r => r.Username);
         }
 
-        private static FileStream PopulateCsvStream(FileStream fileStream, string separator, IEnumerable<AggregatedResult> aggregatedResults)
+        private static async Task<FileStream> PopulateCsvStreamAsync(FileStream fileStream, string separator, IAsyncEnumerable<AggregatedResult> aggregatedResults)
         {
             var headers = new List<string> { "#", "Username", "Total Score", "Scores" };
             using var sw = new StreamWriter(fileStream);
@@ -134,10 +118,11 @@ namespace ChessComTournamentAggregator
 
             var internalSeparator = separator == ";" ? ", " : "; ";
             string aggregate<T>(IEnumerable<T> items) => $"[{string.Join(internalSeparator, items)}]";
-            for (int i = 0; i < aggregatedResults.Count(); ++i)
+
+            await foreach (var aggregatedResult in aggregatedResults.Select((value, i) => new { i, value }))
             {
-                var result = aggregatedResults.ElementAt(i);
-                var columns = new string[] { (i + 1).ToString(), result.Username, result.TotalScores.ToString(), aggregate(result.Scores) };
+                var result = aggregatedResult.value;
+                var columns = new string[] { (aggregatedResult.i + 1).ToString(), result.Username, result.TotalScores.ToString(), aggregate(result.Scores) };
                 sw.WriteLine(string.Join(separator, columns));
             }
 
