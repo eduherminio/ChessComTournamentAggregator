@@ -28,7 +28,7 @@
 
   <ItemGroup>
     <PackageReference Include="LichessTournamentAggregator" Version="0.3.2" />
-    <PackageReference Include="System.Text.Json" Version="4.7.1" />
+    <PackageReference Include="System.Linq.Async" Version="4.1.1" />
   </ItemGroup>
 
 </Project>
