@@ -65,12 +65,11 @@ namespace ChessComTournamentAggregator
         {
             foreach (var item in tournamentIdsOrUrls)
             {
-                string tournamentId = item.Trim(new char[] { ' ', '/', '#' });
+                var tournamentId = item.AsSpan().Trim(new char[] { ' ', '/', '#' });
 
-                var reverse = string.Join("", tournamentId.Reverse());
-                tournamentId = string.Join("", reverse.Take(reverse.IndexOf("/")).Reverse());
+                tournamentId = tournamentId.Slice(tournamentId.LastIndexOf('/') + 1);
 
-                yield return new Uri($"https://api.chess.com/pub/tournament/{tournamentId}");
+                yield return new Uri($"https://api.chess.com/pub/tournament/{tournamentId.ToString()}");
             }
         }
 
@@ -138,7 +137,7 @@ namespace ChessComTournamentAggregator
             for (int i = 0; i < aggregatedResults.Count(); ++i)
             {
                 var result = aggregatedResults.ElementAt(i);
-                var columns = new string[] { (i +1).ToString(), result.Username, result.TotalScores.ToString(), aggregate(result.Scores) };
+                var columns = new string[] { (i + 1).ToString(), result.Username, result.TotalScores.ToString(), aggregate(result.Scores) };
                 sw.WriteLine(string.Join(separator, columns));
             }
 
